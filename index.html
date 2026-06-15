@@ -110,6 +110,15 @@
             color: #fb923c;
             font-weight: bold;
         }
+        .error-message {
+            background: #7f1a1a;
+            color: #fca5a5;
+            padding: 10px;
+            border-radius: 12px;
+            margin-top: 10px;
+            font-size: 0.7rem;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -126,11 +135,11 @@
                 <div class="custom-title">✏️ CUSTOM EQUATION</div>
                 <div class="param-group">
                     <label>dy/dx = f(x, y):</label>
-                    <input type="text" id="customF" value="-6*y + 0.5*y*y + 20*sin(8*x)">
+                    <input type="text" id="customF" value="-5*y + 0.5*y*y + 20*Math.sin(8*x)">
                 </div>
                 <div class="param-group">
-                    <label>Exact Solution (Optional):</label>
-                    <input type="text" id="customExact" value="" placeholder="optional">
+                    <label>Exact Solution (Optional - leave empty):</label>
+                    <input type="text" id="customExact" value="" placeholder="optional - leave blank">
                 </div>
                 <div class="custom-row">
                     <div class="param-group"><label>x₀:</label><input type="number" id="cx0" value="0" step="any"></div>
@@ -142,6 +151,7 @@
                 <div class="auto-fill-note" id="autoFillNote">
                     💡 Click any example → parameters auto-fill here!
                 </div>
+                <div id="errorMsg" class="error-message"></div>
             </div>
             
             <hr>
@@ -152,6 +162,9 @@
             </div>
             <div class="auto-fill-note" style="margin-top: 10px;">
                 🏆 Ralston (α=2/3, w₁=1/4, w₂=3/4) minimizes truncation error → BEST for nonlinear & oscillatory ODEs!
+            </div>
+            <div class="auto-fill-note" style="margin-top: 5px;">
+                📝 <strong>Tip:</strong> Use Math.sin, Math.cos, Math.exp in custom functions!
             </div>
         </div>
         
@@ -225,7 +238,7 @@
             eq: "dy/dx = -5y + 0.5y² + 20·sin(8x)", 
             f: (x,y) => -5*y + 0.5*y*y + 20*Math.sin(8*x), 
             x0: 0, y0: 0.2, xEnd: 2.5,
-            fStr: "-5*y + 0.5*y*y + 20*sin(8*x)",
+            fStr: "-5*y + 0.5*y*y + 20*Math.sin(8*x)",
             gainExp: "⭐ BEST: Ralston ~30-40% better than Midpoint & Heun"
         },
         { 
@@ -233,7 +246,7 @@
             eq: "dy/dx = -8y + 0.3y³ + 25·sin(12x)", 
             f: (x,y) => -8*y + 0.3*y*y*y + 25*Math.sin(12*x), 
             x0: 0, y0: 0.15, xEnd: 2.2,
-            fStr: "-8*y + 0.3*y*y*y + 25*sin(12*x)",
+            fStr: "-8*y + 0.3*y*y*y + 25*Math.sin(12*x)",
             gainExp: "Ralston ~35% lower error than Midpoint"
         },
         { 
@@ -241,7 +254,7 @@
             eq: "dy/dx = -y + (1 - y²)·sin(6x)", 
             f: (x,y) => -y + (1 - y*y)*Math.sin(6*x), 
             x0: 0, y0: 0.3, xEnd: 3.0,
-            fStr: "-y + (1 - y*y)*sin(6*x)",
+            fStr: "-y + (1 - y*y)*Math.sin(6*x)",
             gainExp: "Ralston ~25% more accurate than Heun"
         },
         { 
@@ -249,7 +262,7 @@
             eq: "dy/dx = -10y + 2y² + 30·sin(15x)", 
             f: (x,y) => -10*y + 2*y*y + 30*Math.sin(15*x), 
             x0: 0, y0: 0.1, xEnd: 2.0,
-            fStr: "-10*y + 2*y*y + 30*sin(15*x)",
+            fStr: "-10*y + 2*y*y + 30*Math.sin(15*x)",
             gainExp: "Ralston ~40% better than Heun"
         },
         { 
@@ -257,7 +270,7 @@
             eq: "dy/dx = 2y(1 - y/3) + 10·sin(7x)", 
             f: (x,y) => 2*y*(1 - y/3) + 10*Math.sin(7*x), 
             x0: 0, y0: 0.5, xEnd: 3.0,
-            fStr: "2*y*(1 - y/3) + 10*sin(7*x)",
+            fStr: "2*y*(1 - y/3) + 10*Math.sin(7*x)",
             gainExp: "Ralston ~28% accuracy gain"
         },
         { 
@@ -265,7 +278,7 @@
             eq: "dy/dx = -6y + 0.8y² + 18·sin(9x)", 
             f: (x,y) => -6*y + 0.8*y*y + 18*Math.sin(9*x), 
             x0: 0, y0: 0.25, xEnd: 2.8,
-            fStr: "-6*y + 0.8*y*y + 18*sin(9*x)",
+            fStr: "-6*y + 0.8*y*y + 18*Math.sin(9*x)",
             gainExp: "Ralston smallest RK2 error constant"
         }
     ];
@@ -448,7 +461,7 @@
             else if (errMid < errHe) bestMethod = '<span class="good">🌸 Midpoint</span>';
             else bestMethod = '<span class="good">💧 Heun</span>';
             
-            html += `<table>
+            html += `<tr>
                 <td style="color:#94a3b8;">${xv}</td>
                 <td style="color:#10b981;">${refVal}</td>
                 <td style="color:#22d3ee;">${heVal}</td>
@@ -483,6 +496,9 @@
         
         // Compute and render
         computeAndRender(currentEx, h);
+        
+        // Hide error message
+        document.getElementById('errorMsg').style.display = 'none';
     }
     
     function runCustom() {
@@ -491,15 +507,36 @@
         let y0 = parseFloat(document.getElementById('cy0').value);
         let xend = parseFloat(document.getElementById('cxEnd').value);
         let steps = parseInt(document.getElementById('csteps').value);
-        let h = (xend - x0) / steps;
         
+        if (isNaN(x0) || isNaN(y0) || isNaN(xend) || isNaN(steps) || steps <= 0) {
+            alert("Please enter valid numeric values");
+            return;
+        }
+        
+        let h = (xend - x0) / steps;
         document.getElementById('globalH').value = h.toFixed(6);
         
         let f;
-        try { 
-            f = new Function('x', 'y', 'return (' + fStr + ')'); 
+        try {
+            // Replace common shortcuts with Math. versions
+            let processedFStr = fStr
+                .replace(/sin\(/g, 'Math.sin(')
+                .replace(/cos\(/g, 'Math.cos(')
+                .replace(/exp\(/g, 'Math.exp(')
+                .replace(/pow\(/g, 'Math.pow(')
+                .replace(/sqrt\(/g, 'Math.sqrt(')
+                .replace(/tan\(/g, 'Math.tan(');
+            
+            f = new Function('x', 'y', 'return (' + processedFStr + ')');
+            
+            // Test the function
+            let testVal = f(x0, y0);
+            if (isNaN(testVal) || !isFinite(testVal)) {
+                throw new Error("Function returned invalid value");
+            }
         } catch(e) { 
-            alert('Invalid f(x,y): ' + e.message); 
+            document.getElementById('errorMsg').innerHTML = '❌ Invalid function: ' + e.message + '<br>Use Math.sin, Math.cos, Math.exp etc.';
+            document.getElementById('errorMsg').style.display = 'block';
             return; 
         }
         
@@ -519,6 +556,7 @@
         
         // Remove active class from all example buttons
         document.querySelectorAll('.example-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById('errorMsg').style.display = 'none';
     }
     
     function applyGlobalH() {
